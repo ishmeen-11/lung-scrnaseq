@@ -1,0 +1,21 @@
+# conda env create -f environment.yml && conda activate lungsc && pip install -e .
+name: lungsc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - scanpy>=1.11
+  - anndata>=0.11
+  - scikit-misc          # needed for seurat_v3 HVG selection
+  - harmonypy
+  - python-igraph
+  - leidenalg
+  - pyarrow
+  - pyyaml
+  - streamlit>=1.40
+  - altair>=5
+  - snakemake>=9
+  - snakemake-executor-plugin-slurm
+  - pytest
+  - pip

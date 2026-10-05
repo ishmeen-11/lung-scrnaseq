@@ -1,0 +1,128 @@
+# Prince lab lung scRNA-seq preprocessing.
+#
+#   Local / demo :  snakemake --cores 2 --configfile demo/config/config.yaml
+#   HPC (Slurm)  :  snakemake --profile workflow/profiles/slurm
+#   Only QC      :  snakemake --cores 4 qc_all
+#
+# Raw FASTQs -> Cell Ranger only run when a sample's counts file is missing
+# and its input_format is "cellranger".
+
+import sys
+from pathlib import Path
+
+configfile: "config/config.yaml"
+
+# The config passed with --configfile wins; otherwise the default config/config.yaml.
+_CLI_CFG = list(getattr(workflow, "overwrite_configfiles", None) or [])
+CFG_PATH = Path(_CLI_CFG[-1] if _CLI_CFG else workflow.configfiles[0]).resolve()
+ROOT = CFG_PATH.parent.parent   # repo (or demo) root
+REPO = Path(workflow.basedir).parent
+sys.path.insert(0, str(REPO / "src"))
+from lungsc.config import load_samples  # noqa: E402
+
+config["_root"] = str(ROOT)
+CFG = str(CFG_PATH)
+SAMPLES = load_samples(config)
+RES = ROOT / config["results_dir"]
+DATA = ROOT / config["data_dir"]
+PY = f"PYTHONPATH={REPO / 'src'} python -m lungsc.cli"
+
+
+def counts_path(wc):
+    p = Path(SAMPLES.loc[wc.sample, "counts_path"])
+    return str(p if p.is_absolute() else ROOT / p)
+
+
+rule all:
+    input:
+        RES / "integrated.h5ad",
+        RES / "qc" / "sample_summary.parquet",
+        RES / "qc" / "umap.parquet",
+
+
+rule qc_all:
+    input:
+        expand(RES / "per_sample" / "{sample}.h5ad", sample=SAMPLES.index),
+
+
+# ---------------------------------------------------------------- raw data (HPC)
+
+rule fetch_fastqs:
+    """Download FASTQs from ENA for one sample (run_accessions: comma-separated SRR/ERR IDs)."""
+    output:
+        directory(DATA / "fastq" / "{sample}"),
+    params:
+        acc=lambda wc: SAMPLES.loc[wc.sample, "run_accessions"],
+    log:
+        RES / "logs" / "fetch_{sample}.log",
+    shell:
+        """
+        mkdir -p {output}
+        for ACC in $(echo {params.acc} | tr ',' ' '); do
+          curl -s "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=$ACC&result=read_run&fields=fastq_ftp&format=tsv" \
+            | tail -n +2 | cut -f2 | tr ';' '\\n' \
+            | while read URL; do wget -nv -P {output} "https://$URL"; done
+        done > {log} 2>&1
+        """
+
+
+rule cellranger_count:
+    input:
+        fastqs=DATA / "fastq" / "{sample}",
+    output:
+        h5=DATA / "cellranger" / "{sample}" / "outs" / "filtered_feature_bc_matrix.h5",
+    params:
+        outdir=DATA / "cellranger",
+        cr=config["cellranger"],
+        bam=str(config["cellranger"]["create_bam"]).lower(),
+    threads: config["cellranger"]["cores"]
+    resources:
+        mem_mb=config["cellranger"]["mem_gb"] * 1024,
+        runtime=12 * 60,
+    log:
+        RES / "logs" / "cellranger_{sample}.log",
+    shell:
+        """
+        cd {params.outdir} && rm -rf {wildcards.sample}
+        {params.cr[bin]} count --id={wildcards.sample} \
+            --fastqs={input.fastqs} \
+            --transcriptome={params.cr[transcriptome]} \
+            --create-bam={params.bam} \
+            --localcores={threads} --localmem={params.cr[mem_gb]} > {log} 2>&1
+        """
+
+
+# ---------------------------------------------------------------- preprocessing
+
+rule qc_sample:
+    input:
+        counts_path,
+    output:
+        h5ad=RES / "per_sample" / "{sample}.h5ad",
+        cells=RES / "qc" / "cells" / "{sample}.parquet",
+        funnel=RES / "qc" / "funnel" / "{sample}.parquet",
+        thr=RES / "qc" / "thresholds" / "{sample}.parquet",
+    resources:
+        mem_mb=16000,
+        runtime=60,
+    log:
+        RES / "logs" / "qc_{sample}.log",
+    shell:
+        "{PY} qc --config {CFG} --sample {wildcards.sample} > {log} 2>&1"
+
+
+rule integrate:
+    input:
+        expand(RES / "per_sample" / "{sample}.h5ad", sample=SAMPLES.index),
+    output:
+        h5ad=RES / "integrated.h5ad",
+        summary=RES / "qc" / "sample_summary.parquet",
+        umap=RES / "qc" / "umap.parquet",
+    threads: 4
+    resources:
+        mem_mb=64000,
+        runtime=180,
+    log:
+        RES / "logs" / "integrate.log",
+    shell:
+        "{PY} integrate --config {CFG} > {log} 2>&1"

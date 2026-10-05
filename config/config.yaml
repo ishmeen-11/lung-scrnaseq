@@ -1,0 +1,73 @@
+# Central config. Every path and threshold lives here, nothing is hardcoded in code.
+# Paths are relative to the repo root unless absolute.
+
+samples: config/samples.tsv
+results_dir: results
+data_dir: data
+
+# --- Raw data -> counts (HPC only) --------------------------------------------
+cellranger:
+  bin: cellranger                       # or /burg/home/<uni>/cellranger-9.0.1/cellranger
+  transcriptome: /path/to/refdata-gex-GRCm39-2024-A
+  cores: 8
+  mem_gb: 64
+  create_bam: true                      # keep BAMs: needed for RNA velocity later
+
+velocity:
+  enabled: false                        # stretch goal; needs BAMs + GTF
+  gtf: /path/to/refdata-gex-GRCm39-2024-A/genes/genes.gtf.gz
+
+# --- Metadata derived from the `treatment` column ----------------------------
+treatment_metadata:
+  PBS:  {bacSpecies: "NA", Gram: "NA"}
+  PAO1: {bacSpecies: Pa,  Gram: Neg}
+  CS17: {bacSpecies: Pa,  Gram: Neg}
+  Sa:   {bacSpecies: Sa,  Gram: Pos}
+  Kp:   {bacSpecies: Kp,  Gram: Neg}
+
+# --- QC ------------------------------------------------------------------------
+qc:
+  mode: mad            # "mad" = per-sample adaptive (recommended), "fixed" = Griffin's original cutoffs
+  min_cells_per_gene: 3
+  hard_min_genes: 200  # always applied (both modes)
+
+  fixed:               # reproduces CreateObject/Integration.R
+    max_pct_mt: 7.5
+    min_counts: 1000
+    min_genes: 200
+
+  mad:
+    nmads_counts: 5    # on log1p(total_counts), both tails
+    nmads_genes: 5     # on log1p(n_genes), both tails
+    nmads_mt: 3        # upper tail only
+    max_pct_mt_ceiling: 15   # never keep cells above this, even if MAD allows
+
+  max_pct_hb: 5        # red blood cell / hemoglobin contamination (set null to disable)
+
+  mt_prefix: "mt-"
+  hb_regex: "^Hb[ab]-"
+
+# Marker genes used only for QC diagnostics (not for filtering)
+checks:
+  neutrophil_markers: [Csf3r, S100a8, S100a9, Retnlg, Cxcr2, Mmp9, Lcn2]
+  neutrophil_score_quantile: 0.9   # cells above this score quantile = "putative neutrophils"
+  female_genes: [Xist]
+  male_genes: [Ddx3y, Eif2s3y, Kdm5d, Uty]
+
+# --- Doublets ------------------------------------------------------------------
+doublets:
+  method: scrublet     # scanpy.pp.scrublet, run per sample
+  expected_rate: 0.06
+  remove: true
+
+# --- Merge / normalize / integrate / cluster -------------------------------------
+processing:
+  n_top_genes: 3000
+  normalization: lognorm       # "lognorm" or "pearson_residuals" (closest to SCTransform v2)
+  n_pcs: 50
+  integration: harmony         # "harmony", "none" (scVI planned as an option)
+  batch_key: sample
+  n_neighbors: 30
+  neighbor_pcs: 30
+  leiden_resolution: 0.4
+  seed: 112357

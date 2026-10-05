@@ -1,0 +1,19 @@
+# snakemake --profile workflow/profiles/slurm
+# Ginsburg (Columbia HPC). Fill in the account Griffin uses (his scripts used "rent").
+executor: slurm
+jobs: 20
+latency-wait: 60
+retries: 1
+rerun-incomplete: true
+printshellcmds: true
+default-resources:
+  slurm_account: rent
+  slurm_partition: ""          # leave empty for the default partition
+  mem_mb: 8000
+  runtime: 60
+  cpus_per_task: 1
+set-resources:
+  cellranger_count:
+    cpus_per_task: 8
+  integrate:
+    cpus_per_task: 4
