@@ -1,6 +1,7 @@
 # data and outputs never go in git
 data/
 results/
+results_*/
 demo/
 .snakemake/
 *.h5ad
