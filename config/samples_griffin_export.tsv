@@ -1,0 +1,12 @@
+sample	study	treatment	mouse	run_accessions	input_format	counts_path
+PAO1_WT	Tomlinson2023_Pa	PAO1	WT	TODO	soupx_mtx	data/griffin_export/PAO1_WT
+CS17_WT	Tomlinson2023_Pa	CS17	WT	TODO	soupx_mtx	data/griffin_export/CS17_WT
+Sa_WT	Tomlinson2023_Sa	Sa	WT	TODO	soupx_mtx	data/griffin_export/Sa_WT
+Kp_WT	WongFokLung2022_Kp	Kp	WT	TODO	soupx_mtx	data/griffin_export/Kp_WT
+PBS_WT_Wong	WongFokLung2022_Kp	PBS	WT	TODO	soupx_mtx	data/griffin_export/PBS_WT_Wong
+PBS_WT_Tom	Tomlinson2023_shared	PBS	WT	TODO	soupx_mtx	data/griffin_export/PBS_WT_Tom
+PAO1_IRG1	Tomlinson2023_Pa	PAO1	IRG1	TODO	soupx_mtx	data/griffin_export/PAO1_IRG1
+CS17_IRG1	Tomlinson2023_Pa	CS17	IRG1	TODO	soupx_mtx	data/griffin_export/CS17_IRG1
+Sa_IRG1	Tomlinson2023_Sa	Sa	IRG1	TODO	soupx_mtx	data/griffin_export/Sa_IRG1
+Kp_IRG1	WongFokLung2022_Kp	Kp	IRG1	TODO	soupx_mtx	data/griffin_export/Kp_IRG1
+PBS_IRG1	Tomlinson2023_shared	PBS	IRG1	TODO	soupx_mtx	data/griffin_export/PBS_IRG1

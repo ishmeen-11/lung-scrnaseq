@@ -1,0 +1,78 @@
+# Validation run on counts exported from Griffin's currentObject.rds.
+# Those cells are already QC-filtered, so QC uses his fixed cutoffs and should remove ~nothing.
+# Goal: check our clusters match his cell-type labels.
+samples: config/samples_griffin_export.tsv
+results_dir: results_griffin
+data_dir: data
+cellranger:
+  bin: cellranger
+  transcriptome: /path/to/refdata-gex-GRCm39-2024-A
+  cores: 8
+  mem_gb: 64
+  create_bam: true
+velocity:
+  enabled: false
+  gtf: /path/to/refdata-gex-GRCm39-2024-A/genes/genes.gtf.gz
+treatment_metadata:
+  PBS:
+    bacSpecies: NA
+    Gram: NA
+  PAO1:
+    bacSpecies: Pa
+    Gram: Neg
+  CS17:
+    bacSpecies: Pa
+    Gram: Neg
+  Sa:
+    bacSpecies: Sa
+    Gram: Pos
+  Kp:
+    bacSpecies: Kp
+    Gram: Neg
+qc:
+  mode: fixed
+  min_cells_per_gene: 3
+  hard_min_genes: 200
+  fixed:
+    max_pct_mt: 7.5
+    min_counts: 1000
+    min_genes: 200
+  mad:
+    nmads_counts: 5
+    nmads_genes: 5
+    nmads_mt: 3
+    max_pct_mt_ceiling: 15
+  max_pct_hb: 5
+  mt_prefix: mt-
+  hb_regex: ^Hb[ab]-
+checks:
+  neutrophil_markers:
+  - Csf3r
+  - S100a8
+  - S100a9
+  - Retnlg
+  - Cxcr2
+  - Mmp9
+  - Lcn2
+  neutrophil_score_quantile: 0.9
+  female_genes:
+  - Xist
+  male_genes:
+  - Ddx3y
+  - Eif2s3y
+  - Kdm5d
+  - Uty
+doublets:
+  method: scrublet
+  expected_rate: 0.06
+  remove: true
+processing:
+  n_top_genes: 3000
+  normalization: lognorm
+  n_pcs: 50
+  integration: harmony
+  batch_key: sample
+  n_neighbors: 30
+  neighbor_pcs: 30
+  leiden_resolution: 0.4
+  seed: 112357
