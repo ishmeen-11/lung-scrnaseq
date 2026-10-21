@@ -12,6 +12,7 @@
 | HVGs | SCT variable features | 3,000 seurat_v3 HVGs, selected per sample then combined | One lab can't dominate gene selection |
 | Integration | RPCA (Seurat), 50 dims | Harmony on 50 PCs (default); scVI planned | RPCA is Seurat-only. Harmony is the closest well-tested "loose" integration |
 | Clustering | Leiden, res 0.4, 30 dims | Leiden, res 0.4, 30 dims | Same |
+| Annotation | Manual, guided by marker lists + UCell | Automatic first pass: `sc.tl.score_genes` with Griffin's final marker lists; each cluster gets the top-scoring type, low-margin calls flagged for review | Reproducible starting point; final labels still need a human check |
 
 ## New diagnostics (not filters)
 

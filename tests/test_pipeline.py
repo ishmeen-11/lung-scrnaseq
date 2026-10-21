@@ -52,8 +52,19 @@ def test_integrated_object(demo):
 def test_sex_check(demo):
     root, _ = demo
     s = pd.read_parquet(root / "results" / "qc" / "sample_summary.parquet").set_index("sample")
-    assert s.loc["Kp_WT", "sex_call"] == "male"
-    assert s.loc["Sa_WT", "sex_call"] == "female"
+    assert s.loc["Kp_WT", "sex_call"] == "male only"
+    assert s.loc["Sa_WT", "sex_call"] == "female only"
+
+
+def test_annotation_recovers_simulated_types(demo):
+    root, _ = demo
+    t = pd.read_parquet(root / "results" / "annotation" / "cluster_labels.parquet")
+    # demo simulates neutrophils, alveolar macrophages, B cells and endothelial cells
+    assert {"Neu", "AM", "BCell", "EC"} <= set(t["cell_type"])
+    comp = pd.read_parquet(root / "results" / "annotation" / "composition.parquet")
+    fr = comp.groupby("sample")["fraction"].sum()
+    assert ((fr - 1).abs() < 1e-9).all()
+    assert (root / "results" / "annotation" / "marker_dotplot.png").exists()
 
 
 def test_fixed_mode_matches_griffin(demo):

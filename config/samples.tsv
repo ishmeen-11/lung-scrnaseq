@@ -1,12 +1,12 @@
-sample	study	treatment	mouse	run_accessions	input_format	counts_path
-PAO1_WT	Tomlinson2023_Pa	PAO1	WT	TODO	cellranger	data/cellranger/PAO1_WT/outs/filtered_feature_bc_matrix.h5
-CS17_WT	Tomlinson2023_Pa	CS17	WT	TODO	cellranger	data/cellranger/CS17_WT/outs/filtered_feature_bc_matrix.h5
-Sa_WT	Tomlinson2023_Sa	Sa	WT	TODO	cellranger	data/cellranger/Sa_WT/outs/filtered_feature_bc_matrix.h5
-Kp_WT	WongFokLung2022_Kp	Kp	WT	TODO	cellranger	data/cellranger/Kp_WT/outs/filtered_feature_bc_matrix.h5
-PBS_WT_Wong	WongFokLung2022_Kp	PBS	WT	TODO	cellranger	data/cellranger/PBS_WT_Wong/outs/filtered_feature_bc_matrix.h5
-PBS_WT_Tom	Tomlinson2023_shared	PBS	WT	TODO	cellranger	data/cellranger/PBS_WT_Tom/outs/filtered_feature_bc_matrix.h5
-PAO1_IRG1	Tomlinson2023_Pa	PAO1	IRG1	TODO	cellranger	data/cellranger/PAO1_IRG1/outs/filtered_feature_bc_matrix.h5
-CS17_IRG1	Tomlinson2023_Pa	CS17	IRG1	TODO	cellranger	data/cellranger/CS17_IRG1/outs/filtered_feature_bc_matrix.h5
-Sa_IRG1	Tomlinson2023_Sa	Sa	IRG1	TODO	cellranger	data/cellranger/Sa_IRG1/outs/filtered_feature_bc_matrix.h5
-Kp_IRG1	WongFokLung2022_Kp	Kp	IRG1	TODO	cellranger	data/cellranger/Kp_IRG1/outs/filtered_feature_bc_matrix.h5
-PBS_IRG1	Tomlinson2023_shared	PBS	IRG1	TODO	cellranger	data/cellranger/PBS_IRG1/outs/filtered_feature_bc_matrix.h5
+sample	study	treatment	mouse	geo_series	geo_sample	run_accessions	dose_cfu	hours_post_infection	input_format	counts_path
+PAO1_WT	Tomlinson2023_Pa	PAO1	WT	GSE203352	GSM6167464	SRR19309467,SRR19309468	1e6	24	soupx_mtx	data/SoupX_Outs/PAO1_WT_strained
+CS17_WT	Tomlinson2023_Pa	CS17	WT	GSE203352	GSM6167466	SRR19309463,SRR19309464	1e6	24	soupx_mtx	data/SoupX_Outs/CS17_WT_strained
+Sa_WT	Tomlinson2023_Sa	Sa	WT	GSE215195	GSM6625634	SRR21855936,SRR21855937	2e7	24	soupx_mtx	data/SoupX_Outs/Sa_WT_strained
+Kp_WT	WongFokLung2022_Kp	Kp	WT	GSE190262	GSM5718728	SRR17141915,SRR17141916	1e8	48	soupx_mtx	data/SoupX_Outs/Kp_WT_strained
+PBS_WT_Wong	WongFokLung2022_Kp	PBS	WT	GSE190262	GSM5718727	SRR17141917,SRR17141918	0		soupx_mtx	data/SoupX_Outs/PBS_WT_Wong_strained
+PBS_WT_Tom	Tomlinson2023_Pa	PBS	WT	GSE203352	GSM6167462	SRR19309471,SRR19309472	0		soupx_mtx	data/SoupX_Outs/PBS_WT_Tom_strained
+PAO1_IRG1	Tomlinson2023_Pa	PAO1	Irg1	GSE203352	GSM6167465	SRR19309465,SRR19309466	1e6	24	soupx_mtx	data/SoupX_Outs/PAO1_IRG1_strained
+CS17_IRG1	Tomlinson2023_Pa	CS17	Irg1	GSE203352	GSM6167467	SRR19309461,SRR19309462	1e6	24	soupx_mtx	data/SoupX_Outs/CS17_IRG1_strained
+Sa_IRG1	Tomlinson2023_Sa	Sa	Irg1	GSE215195	GSM6625635	SRR21855934,SRR21855935	2e7	24	soupx_mtx	data/SoupX_Outs/Sa_IRG1_strained
+Kp_IRG1	WongFokLung2022_Kp	Kp	Irg1	GSE190262	GSM5718730	SRR17141911,SRR17141912	1e8	48	soupx_mtx	data/SoupX_Outs/Kp_IRG1_strained
+PBS_IRG1	Tomlinson2023_Pa	PBS	Irg1	GSE203352	GSM6167463	SRR19309469,SRR19309470	0		soupx_mtx	data/SoupX_Outs/PBS_IRG1_strained

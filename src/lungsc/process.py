@@ -87,6 +87,7 @@ def sample_summary(adata: ad.AnnData, cells: pd.DataFrame, cfg: dict) -> pd.Data
     }).fillna(0)
     out["pct_kept"] = 100 * out["cells_kept"] / out["cells_raw"]
     ratio = (out["female_cpm"] + 1) / (out["male_cpm"] + 1)
-    out["sex_call"] = np.select([ratio > 10, ratio < 0.1], ["female", "male"], "ambiguous")
+    # Samples pool several mice (~50:50 male:female per Griffin), so "mixed" is the expected call.
+    out["sex_call"] = np.select([ratio > 10, ratio < 0.1], ["female only", "male only"], "mixed")
     meta = adata.obs.groupby("sample", observed=True)[["study", "treatment", "mouse", "Gram"]].first()
     return out.join(meta).reset_index(names="sample")

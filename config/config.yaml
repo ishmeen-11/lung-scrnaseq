@@ -71,3 +71,46 @@ processing:
   neighbor_pcs: 30
   leiden_resolution: 0.4
   seed: 112357
+
+# --- Annotation ------------------------------------------------------------------
+# Griffin's final marker lists (email 2026-10-09; "# Current lists" in Annotation.R).
+# Each Leiden cluster gets the cell type whose markers score highest (sc.tl.score_genes).
+# Low-margin calls are flagged for manual review, not trusted blindly.
+annotation:
+  enabled: true
+  min_margin: 0.1          # top score minus runner-up; below this the call is flagged "check"
+  markers:
+    AM: [Siglecf, Pparg, Ear1, Krt79, Car4]
+    BCell: [Ly6d, Cd79a, Cd79b, Cd19, Pax5]
+    Neu: [Csf3r, Mmp9, Cxcr2, S100a8, Lcn2]
+    Mega: [Ppbp, Nrgn, Clec1b, Alox12, Gp9]
+    MoMac: [Ly6c2, Ccr2, Fn1, Vcan, Ms4a4c]
+    NK: [Ncr1, Gzma, Gzmb, Nkg7, Klrb1c]
+    ILC: [Gata3, Calca, Il1rl1, Emb, Il7r]
+    TCell: [Trbc2, Cd3g, Cd3d, Trac, Cd4, Cd8a]
+    EC: [Cldn5, Ramp2, Lyve1, Pecam1, Ldb2, Ptprm]
+    Col13a1Fibro: [Col13a1, Itga8, Cxcl14, Npnt, Col1a2]
+    Col14a1Fibro: [Col14a1, Pi16, Mmp3, Cygb, Meg3]
+    SMC: [Lmod1, Actg2, Acta2, Cnn1, Myh11]
+    cDC1: [Itgae, Xcr1, Clec9a, Wdfy4, Flt3]
+    cDC2: [Cd209a, S100a4, Clec10a, Irf4, H2-Ab1]
+    migDC: [Ccr7, Fscn1, Ccl17, Ccl22]
+    AT2: [Sftpa1, Sftpb, Sftpc, Sftpd, Lyz2]
+    IM: [C1qa, C1qb, C1qc, Csf1r, Mafb]
+    ncMo: [Hgf, Nr4a1, Cebpb]
+    AT1: [Scnn1g, Hopx, Ager, Gramd2, Aqp5]
+    Meso: [Igfbp5, Igfbp6, Rarres2, Gpc3, Msln]
+    Cil: [Cdhr3, Dynlrb2, Cfap126, Ccdc153, Foxj1]
+    Club: [Scgb3a2, Scgb1a1, Wfdc2, Cbr2]
+    NKT: [Cd3e, Klrk1, Klrc2]
+    moDC: [Fcgr1, Mertk, Fcer1g]
+    myoFibro: [Hhip, Aspn, Mustn1, Tagln, Scx]
+    Peri: [Gucy1b1, Pde5a, Higd1b, Pdgfrb, Cspg4]
+    Oligo: [Sox10, Plp1, Cnp, Mbp, Ncam1]
+  coarse:                  # finer labels that collapse at the coarse level
+    Col13a1Fibro: Fibro
+    Col14a1Fibro: Fibro
+    cDC1: DC
+    cDC2: DC
+    migDC: DC
+    moDC: DC

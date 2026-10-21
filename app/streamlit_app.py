@@ -41,7 +41,10 @@ def load(results: str):
     thr = read_dir("thresholds")
     summary = pd.read_parquet(qc / "sample_summary.parquet") if (qc / "sample_summary.parquet").exists() else None
     umap = pd.read_parquet(qc / "umap.parquet") if (qc / "umap.parquet").exists() else None
-    return cells, funnel, thr, summary, umap
+    ann = Path(results) / "annotation"
+    labels = pd.read_parquet(ann / "cluster_labels.parquet") if (ann / "cluster_labels.parquet").exists() else None
+    comp = pd.read_parquet(ann / "composition.parquet") if (ann / "composition.parquet").exists() else None
+    return cells, funnel, thr, summary, umap, labels, comp
 
 
 RESULTS = _results_dir()
@@ -49,15 +52,15 @@ if not (RESULTS / "qc" / "cells").exists():
     st.error(f"No QC tables found under {RESULTS}/qc. Run the pipeline first (see README).")
     st.stop()
 
-cells, funnel, thr, summary, umap = load(str(RESULTS))
+cells, funnel, thr, summary, umap, labels, comp = load(str(RESULTS))
 samples = sorted(cells["sample"].unique())
 
 st.title("Lung scRNA-seq · preprocessing QC")
 st.caption(f"Results: `{RESULTS}` · {len(samples)} samples · {len(cells):,} cells before QC · "
            f"QC mode: **{thr['mode'].iloc[0]}**")
 
-tab_over, tab_funnel, tab_dist, tab_explore, tab_sex, tab_umap = st.tabs(
-    ["Overview", "Filter funnel", "Distributions", "Threshold explorer", "Sex check", "UMAP"])
+tab_over, tab_funnel, tab_dist, tab_explore, tab_sex, tab_umap, tab_ct = st.tabs(
+    ["Overview", "Filter funnel", "Distributions", "Threshold explorer", "Sex check", "UMAP", "Cell types"])
 
 # ---------------------------------------------------------------- overview
 with tab_over:
@@ -178,12 +181,48 @@ with tab_umap:
     if umap is None:
         st.info("Available after the integrate step.")
     else:
-        color = st.selectbox("Color by", ["leiden", "sample", "treatment", "mouse", "Gram",
-                                          "neutrophil_score", "pct_counts_mt", "total_counts"])
+        opts = [c for c in ["cell_type", "cell_type_coarse", "leiden", "sample", "treatment", "mouse", "Gram",
+                            "neutrophil_score", "pct_counts_mt", "total_counts"] if c in umap.columns]
+        color = st.selectbox("Color by", opts)
         u = umap if len(umap) <= MAX_POINTS else umap.sample(MAX_POINTS, random_state=0)
         ctype = "Q" if pd.api.types.is_numeric_dtype(u[color]) else "N"
         sort = sorted(u[color].astype(str).unique(), key=lambda v: (len(v), v)) if ctype == "N" else None
         st.altair_chart(alt.Chart(u).mark_circle(size=5, opacity=0.6).encode(
             x=alt.X("umap_1:Q", axis=None), y=alt.Y("umap_2:Q", axis=None),
-            color=alt.Color(f"{color}:{ctype}", sort=sort), tooltip=["sample", "leiden", "treatment", "mouse"])
+            color=alt.Color(f"{color}:{ctype}", sort=sort), tooltip=[c for c in ["sample", "leiden", "cell_type", "treatment", "mouse"] if c in u.columns])
             .properties(height=560), width="stretch")
+
+# ---------------------------------------------------------------- cell types
+with tab_ct:
+    if labels is None or comp is None:
+        st.info("Available after the integrate step with annotation enabled.")
+    else:
+        st.markdown("Clusters labelled with Griffin's marker lists. **Margin** = top score minus runner-up; "
+                    "low-margin clusters need a manual look before anyone trusts the label.")
+        level = st.radio("Level", ["cell_type", "cell_type_coarse"], horizontal=True,
+                         format_func=lambda x: "fine" if x == "cell_type" else "coarse")
+        c = comp.copy()
+        if level == "cell_type_coarse":
+            fine_to_coarse = dict(zip(labels["cell_type"], labels["cell_type_coarse"]))
+            c["cell_type"] = c["cell_type"].map(lambda x: fine_to_coarse.get(x, x))
+            c = c.groupby(["sample", "cell_type", "treatment", "mouse", "Gram", "study"],
+                          observed=True, as_index=False)[["n_cells", "fraction"]].sum()
+        st.markdown("**Composition per sample** (fraction of each sample's cells)")
+        st.altair_chart(alt.Chart(c).mark_bar().encode(
+            x=alt.X("sample:N", sort=samples), y=alt.Y("fraction:Q", stack="normalize", title="fraction"),
+            color=alt.Color("cell_type:N", sort="-y"),
+            tooltip=["sample", "cell_type", "n_cells", alt.Tooltip("fraction:Q", format=".1%")])
+            .properties(height=380), width="stretch")
+        pick = st.selectbox("Compare one cell type across samples", sorted(c["cell_type"].unique()),
+                            index=sorted(c["cell_type"].unique()).index("Neu") if "Neu" in set(c["cell_type"]) else 0)
+        one = c[c["cell_type"] == pick]
+        st.altair_chart(alt.Chart(one).mark_bar().encode(
+            x=alt.X("sample:N", sort=samples), y=alt.Y("fraction:Q", axis=alt.Axis(format="%")),
+            color="mouse:N", tooltip=["sample", "n_cells", alt.Tooltip("fraction:Q", format=".1%")])
+            .properties(height=260), width="stretch")
+        st.caption("One sample per condition, so these are descriptive, not tested differences.")
+        st.markdown("**Cluster labels**")
+        st.dataframe(labels.round(3), hide_index=True, width="stretch")
+        dot = RESULTS / "annotation" / "marker_dotplot.png"
+        if dot.exists():
+            st.image(str(dot), caption="Griffin's markers by assigned cell type")

@@ -24,7 +24,9 @@ pytest -q
 
 ## Real data
 
-1. Fill in `config/samples.tsv`: one row per sample. `input_format` is one of
+0. Unzip Griffin's `SoupX_Outs.zip` into `data/` so you have `data/SoupX_Outs/<sample>_strained/`.
+   `config/samples.tsv` already points there, with GEO/SRA accessions, dose and timepoint filled in.
+1. To add new samples, edit `config/samples.tsv`: one row per sample. `input_format` is one of
    `cellranger` (filtered `.h5` or mtx folder), `cellbender`, `soupx_mtx`
    (Griffin's SoupX folders) or `h5ad`. Add SRA/ENA run IDs to `run_accessions` to
    download FASTQs and run Cell Ranger automatically.
@@ -47,6 +49,9 @@ pytest -q
 | `qc/funnel/*.parquet` | cells (and putative neutrophils) left after each filter |
 | `qc/thresholds/*.parquet` | thresholds actually applied per sample |
 | `qc/sample_summary.parquet` | depth, retention, doublet rate, sex call per sample |
+| `annotation/cluster_labels.parquet` | cell type per Leiden cluster (Griffin's markers), with confidence margin |
+| `annotation/composition.parquet` | cells and fractions per sample × cell type |
+| `annotation/marker_dotplot.png` | marker expression by assigned cell type |
 
 To open the result in R/Seurat: `zellkonverter::readH5AD("results/integrated.h5ad")`.
 

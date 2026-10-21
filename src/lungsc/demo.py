@@ -19,7 +19,7 @@ from scipy import io as sio
 from scipy import sparse
 
 NEU = ["Csf3r", "S100a8", "S100a9", "Retnlg", "Cxcr2", "Mmp9", "Lcn2"]
-MAC = ["Siglecf", "Pparg", "Ear1", "Krt79", "Car4", "C1qa", "C1qb"]
+MAC = ["Siglecf", "Pparg", "Ear1", "Krt79", "Car4"]  # alveolar macrophage markers
 BCELL = ["Cd79a", "Cd79b", "Cd19", "Pax5", "Ly6d"]
 EC = ["Cldn5", "Ramp2", "Pecam1", "Lyve1"]
 MT = [f"mt-Gene{i}" for i in range(13)]
@@ -28,7 +28,7 @@ SEX = ["Xist", "Ddx3y", "Eif2s3y", "Kdm5d", "Uty"]
 
 SAMPLES = [  # name, treatment, mouse, study, sex
     ("Sa_WT", "Sa", "WT", "Tomlinson2023_Sa", "female"),
-    ("Sa_IRG1", "Sa", "IRG1", "Tomlinson2023_Sa", "female"),
+    ("Sa_IRG1", "Sa", "Irg1", "Tomlinson2023_Sa", "female"),
     ("Kp_WT", "Kp", "WT", "WongFokLung2022_Kp", "male"),
     ("PBS_WT_Tom", "PBS", "WT", "Tomlinson2023_shared", "female"),
 ]
