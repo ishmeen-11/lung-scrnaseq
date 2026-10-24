@@ -48,14 +48,22 @@ def load(results: str):
 
 
 RESULTS = _results_dir()
+DEMO = Path(__file__).resolve().parent / "demo_results"  # small synthetic tables shipped with the repo
+USING_DEMO = False
 if not (RESULTS / "qc" / "cells").exists():
-    st.error(f"No QC tables found under {RESULTS}/qc. Run the pipeline first (see README).")
-    st.stop()
+    if (DEMO / "qc" / "cells").exists():
+        RESULTS, USING_DEMO = DEMO, True
+    else:
+        st.error(f"No QC tables found under {RESULTS}/qc. Run the pipeline first (see README).")
+        st.stop()
 
 cells, funnel, thr, summary, umap, labels, comp = load(str(RESULTS))
 samples = sorted(cells["sample"].unique())
 
 st.title("Lung scRNA-seq · preprocessing QC")
+if USING_DEMO:
+    st.info("Showing **synthetic demo data** (`python -m lungsc.demo`). "
+            "Run the pipeline and pass `--results` to view real samples.")
 st.caption(f"Results: `{RESULTS}` · {len(samples)} samples · {len(cells):,} cells before QC · "
            f"QC mode: **{thr['mode'].iloc[0]}**")
 
