@@ -8,12 +8,24 @@ import scanpy as sc
 
 
 def merge(adatas: dict[str, ad.AnnData], metadata: dict[str, dict], cfg: dict) -> ad.AnnData:
+    cap = cfg["processing"].get("max_cells_per_sample")
+    if cap:
+        # Laptop mode: keep a random subset per sample so the merged object fits in RAM.
+        rng = np.random.default_rng(cfg["processing"]["seed"])
+        for name, a in list(adatas.items()):
+            if a.n_obs > cap:
+                keep = np.sort(rng.choice(a.n_obs, cap, replace=False))
+                adatas[name] = a[keep].copy()
     for name, a in adatas.items():
+        if a.X.dtype != np.float32:  # halves memory vs float64
+            a.X = a.X.astype(np.float32)
+            a.layers["counts"] = a.X.copy()
         for k, v in metadata[name].items():
             a.obs[k] = v
         a.obs_names = [f"{name}_{bc}" for bc in a.obs_names]  # barcodes collide across samples
     # Outer join keeps genes seen in any sample (missing = 0), like Seurat's merge.
     adata = ad.concat(adatas, join="outer", merge="same", fill_value=0)
+    adatas.clear()  # free the per-sample copies before the heavy steps
     for col in ["sample", "study", "treatment", "mouse", "bacSpecies", "Gram"]:
         adata.obs[col] = adata.obs[col].astype("category")
     sc.pp.filter_genes(adata, min_cells=cfg["qc"]["min_cells_per_gene"])

@@ -1,0 +1,7 @@
+# snakemake --profile workflow/profiles/laptop
+# For an 8 GB laptop: one job at a time, and at most 4,000 cells per sample in the
+# merge step. Good for a first look; run the full set on Insomnia.
+cores: 1
+rerun-incomplete: true
+config:
+  - max_cells_per_sample=4000

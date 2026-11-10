@@ -44,6 +44,9 @@ def cmd_qc(args):
 
 def cmd_integrate(args):
     cfg = C.load_config(args.config)
+    if args.max_cells_per_sample:
+        cfg["processing"]["max_cells_per_sample"] = args.max_cells_per_sample
+        log.info("laptop mode: at most %d cells per sample", args.max_cells_per_sample)
     samples = C.load_samples(cfg)
     names = list(samples.index)
 
@@ -92,6 +95,8 @@ def main(argv=None):
 
     p = sub.add_parser("integrate", help="merge all samples, normalize, integrate, cluster")
     p.add_argument("--config", required=True)
+    p.add_argument("--max-cells-per-sample", type=int, default=None,
+                   help="random subset per sample, for low-memory machines")
     p.set_defaults(func=cmd_integrate)
 
     args = ap.parse_args(argv)

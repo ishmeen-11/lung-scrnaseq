@@ -1,0 +1,22 @@
+# snakemake --profile workflow/profiles/insomnia
+# Columbia Insomnia cluster (Slurm). Set slurm_account to your group's account:
+#   sacctmgr show assoc user=$USER format=account
+executor: slurm
+jobs: 20
+latency-wait: 60
+retries: 1
+rerun-incomplete: true
+default-resources:
+  slurm_account: CHANGE_ME
+  mem_mb: 16000
+  runtime: 120
+  cpus_per_task: 2
+set-resources:
+  integrate:
+    mem_mb: 128000
+    runtime: 360
+    cpus_per_task: 8
+  cellranger_count:
+    mem_mb: 64000
+    runtime: 720
+    cpus_per_task: 8

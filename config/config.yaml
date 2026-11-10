@@ -71,6 +71,7 @@ processing:
   neighbor_pcs: 30
   leiden_resolution: 0.4
   seed: 112357
+  max_cells_per_sample: null   # e.g. 4000 for a quick look on an 8 GB laptop; null = all cells
 
 # --- Annotation ------------------------------------------------------------------
 # Griffin's final marker lists (email 2026-10-09; "# Current lists" in Annotation.R).

@@ -26,6 +26,9 @@ SAMPLES = load_samples(config)
 RES = ROOT / config["results_dir"]
 DATA = ROOT / config["data_dir"]
 PY = f"PYTHONPATH={REPO / 'src'} python -m lungsc.cli"
+# Laptop mode: `--config max_cells_per_sample=4000` (set by workflow/profiles/laptop)
+MAXC = config.get("max_cells_per_sample")
+MAXC_FLAG = f"--max-cells-per-sample {int(MAXC)}" if MAXC else ""
 
 
 def counts_path(wc):
@@ -125,4 +128,4 @@ rule integrate:
     log:
         RES / "logs" / "integrate.log",
     shell:
-        "{PY} integrate --config {CFG} > {log} 2>&1"
+        "{PY} integrate --config {CFG} {MAXC_FLAG} > {log} 2>&1"

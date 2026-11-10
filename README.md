@@ -33,6 +33,8 @@ pytest -q
 2. Set paths in `config/config.yaml` (Cell Ranger binary, reference, Slurm account).
 3. Run:
    ```bash
+   snakemake --profile workflow/profiles/laptop     # 8 GB laptop: 1 job at a time, 4,000 cells/sample
+   snakemake --profile workflow/profiles/insomnia   # Columbia Insomnia (set slurm_account first)
    snakemake --profile workflow/profiles/slurm   # Ginsburg
    snakemake --cores 8                           # local, if counts already exist
    snakemake --cores 8 qc_all                    # QC only, to tune thresholds first
