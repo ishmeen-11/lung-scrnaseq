@@ -1,7 +1,8 @@
 # lung-scrnaseq
 
 Reproducible preprocessing for the Prince lab 3-species lung scRNA-seq data
-(*S. aureus*, *P. aeruginosa*, *K. pneumoniae*, PBS; WT vs *Irg1*-/- mice).
+(*S. aureus*, *P. aeruginosa* PAO1/CS17, *K. pneumoniae*, PBS; WT mice. The *Irg1*-/- samples
+are listed in `config/samples_with_irg1.tsv` but excluded from the current run).
 Python / Scanpy, run with Snakemake (laptop or Ginsburg/Slurm), with a Streamlit
 QC viewer.
 
@@ -40,6 +41,27 @@ pytest -q
    snakemake --cores 8 qc_all                    # QC only, to tune thresholds first
    ```
 4. Copy `results/qc/` to your laptop and open the viewer.
+
+## Full run on AWS EC2
+
+An 8 GB laptop can only merge a 4,000-cell subsample per sample. For the full run, one
+r6i.xlarge (32 GB, 4 vCPU, roughly $0.25/hr) is enough for the 6 WT samples (~30k cells, ~5 min):
+
+1. Launch an Ubuntu 24.04 instance with an SSH key and a security group open to your IP on port 22.
+2. `rsync` the repo with `data/SoupX_Outs/` to it (exclude `results/` and `.snakemake/`).
+3. On the instance: install Miniforge, `conda env create -f environment.yml`, `conda activate lungsc`,
+   `pip install -e .`, then `snakemake --cores 4 --rerun-incomplete` inside `tmux`.
+4. `rsync` `results/` back to `results_full/` on your laptop, then **terminate the instance**.
+
+## Streamlit viewer
+
+```bash
+streamlit run app/streamlit_app.py --server.fileWatcherType none -- --results results_full
+```
+
+With no `--results` folder present (e.g. on Streamlit Community Cloud), the app shows the QC
+tables from the full run bundled in `app/bundled_results/` (parquet only, no expression data).
+Deploy on Streamlit Cloud with main file `app/streamlit_app.py`; it installs `app/requirements.txt`.
 
 ## Outputs (`results/`)
 

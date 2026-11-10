@@ -48,14 +48,37 @@ def load(results: str):
 
 
 RESULTS = _results_dir()
+# On Streamlit Cloud there is no results/ folder, so fall back to the QC tables
+# from the full EC2 run that ship with the repo (6 WT samples, no cell cap).
+BUNDLED = Path(__file__).resolve().parent / "bundled_results"
+USING_BUNDLED = False
+if not (RESULTS / "qc" / "cells").exists():
+    if (BUNDLED / "qc" / "cells").exists():
+        RESULTS, USING_BUNDLED = BUNDLED, True
+    else:
+        st.error(f"No QC tables found under {RESULTS}/qc. Run the pipeline first (see README).")
+        st.stop()
 if not (RESULTS / "qc" / "cells").exists():
     st.error(f"No QC tables found under {RESULTS}/qc. Run the pipeline first (see README).")
     st.stop()
 
+def _safe(df: pd.DataFrame) -> pd.DataFrame:
+    """Cast object/category columns to plain strings before display.
+    pyarrow 25 segfaults converting some mixed-type object columns."""
+    df = df.copy()
+    for c in df.columns:
+        if df[c].dtype == object or isinstance(df[c].dtype, pd.CategoricalDtype):
+            df[c] = df[c].astype(str).replace({"nan": "", "None": ""})
+    return df
+
 cells, funnel, thr, summary, umap, labels, comp = load(str(RESULTS))
+cells, funnel, thr, summary, umap, labels, comp = (
+    None if d is None else _safe(d) for d in (cells, funnel, thr, summary, umap, labels, comp))
 samples = sorted(cells["sample"].unique())
 
 st.title("Lung scRNA-seq · preprocessing QC")
+if USING_BUNDLED:
+    st.info("Showing the bundled full run: 6 WT samples (PAO1, CS17, Sa, Kp, 2× PBS), all cells, run on EC2 on Nov 10.")
 st.caption(f"Results: `{RESULTS}` · {len(samples)} samples · {len(cells):,} cells before QC · "
            f"QC mode: **{thr['mode'].iloc[0]}**")
 
@@ -73,7 +96,7 @@ with tab_over:
                   f"{summary['median_counts_raw'].min():,.0f} – {summary['median_counts_raw'].max():,.0f}")
         st.markdown("**Per-sample summary.** A large spread in median UMIs between studies "
                     "means sequencing depth differs by lab and can look like biology.")
-        st.dataframe(summary.round(1), width="stretch", hide_index=True)
+        st.dataframe(_safe(summary.round(1)), width="stretch", hide_index=True)
         st.altair_chart(
             alt.Chart(summary).mark_bar().encode(
                 x=alt.X("sample:N", sort=samples), y=alt.Y("median_counts_raw:Q", title="median UMIs/cell"),
@@ -95,10 +118,10 @@ with tab_funnel:
             x=alt.X("step:N", sort=order), y="cells_remaining:Q", color="sample:N",
             tooltip=list(f.columns)).properties(height=320), width="stretch")
     last = f[f["step"] == "doublets"][["sample", "cells_remaining", "pct_neutrophils_lost"]]
-    st.dataframe(last.rename(columns={"cells_remaining": "cells_kept"}).round(1),
+    st.dataframe(_safe(last.rename(columns={"cells_remaining": "cells_kept"}).round(1)),
                  hide_index=True, width="stretch")
     with st.expander("Full funnel table"):
-        st.dataframe(f.round(1), hide_index=True, width="stretch")
+        st.dataframe(_safe(f.round(1)), hide_index=True, width="stretch")
 
 # ---------------------------------------------------------------- distributions
 METRICS = {
@@ -151,7 +174,7 @@ with tab_explore:
     }).fillna(0).astype(int)
     res["% neutrophils lost (these settings)"] = (
         100 * (1 - res["neutrophils kept (these settings)"] / res["neutrophils_raw"].clip(lower=1))).round(1)
-    st.dataframe(res.reset_index(), hide_index=True, width="stretch")
+    st.dataframe(_safe(res.reset_index()), hide_index=True, width="stretch")
 
     sub = e if len(e) <= MAX_POINTS else e.sample(MAX_POINTS, random_state=0)
     sub = sub.assign(log_counts=np.log10(sub["total_counts"] + 1))
@@ -168,7 +191,7 @@ with tab_sex:
                 "If studies used different sexes, sex is confounded with pathogen.")
     if summary is not None:
         s = summary[["sample", "study", "female_cpm", "male_cpm", "sex_call"]]
-        st.dataframe(s.round(1), hide_index=True, width="stretch")
+        st.dataframe(_safe(s.round(1)), hide_index=True, width="stretch")
         m = s.melt(id_vars=["sample", "sex_call"], value_vars=["female_cpm", "male_cpm"])
         st.altair_chart(alt.Chart(m).mark_bar().encode(
             x=alt.X("sample:N", sort=samples), y="value:Q", color="variable:N", xOffset="variable:N")
@@ -222,7 +245,7 @@ with tab_ct:
             .properties(height=260), width="stretch")
         st.caption("One sample per condition, so these are descriptive, not tested differences.")
         st.markdown("**Cluster labels**")
-        st.dataframe(labels.round(3), hide_index=True, width="stretch")
+        st.dataframe(_safe(labels.round(3)), hide_index=True, width="stretch")
         dot = RESULTS / "annotation" / "marker_dotplot.png"
         if dot.exists():
             st.image(str(dot), caption="Griffin's markers by assigned cell type")

@@ -13,9 +13,9 @@ default-resources:
   cpus_per_task: 2
 set-resources:
   integrate:
-    mem_mb: 128000
-    runtime: 360
-    cpus_per_task: 8
+    mem_mb: 64000
+    runtime: 240
+    cpus_per_task: 4
   cellranger_count:
     mem_mb: 64000
     runtime: 720
